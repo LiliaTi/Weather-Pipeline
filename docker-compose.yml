@@ -1,0 +1,60 @@
+
+#version: '3.8'  
+
+services:
+  jupyter:
+    build: .
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./src:/app
+    command: jupyter notebook --ip=0.0.0.0 --allow-root --NotebookApp.token=''
+    depends_on:
+      - timescaledb
+    networks:  # Добавьте jupyter в ту же сеть!
+      - logs-net
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    env_file: ./src/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    networks:
+      - logs-net
+
+  pgadmin:
+    image: dpage/pgadmin4
+    env_file: ./src/.env
+    ports:
+      - "5051:80"
+    depends_on:
+      - timescaledb
+    networks:
+      - logs-net
+    links:
+      - timescaledb
+
+  # Сервис для ETL-команд
+  etl:
+    build: .
+    env_file: ./src/.env
+    depends_on:
+      - timescaledb
+    volumes:
+       - ./src:/app  # Основной код
+       - ./src/data:/app/data  # Данные
+    networks:
+      - logs-net
+    # команды будут передаваться при запуске
+    command: sleep infinity
+
+volumes:
+  timescaledb_data:
+
+
+networks:
+  logs-net:
+    driver: bridge
+    name: logs-net 

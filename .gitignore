@@ -1,0 +1,9 @@
+# Основные исключения
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+*.ipynb
+.venv/
+.env
+*.log
+*.tmp
